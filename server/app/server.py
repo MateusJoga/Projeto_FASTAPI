@@ -1,41 +1,69 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 import json
 import uvicorn
-from pathlib import Path
 import os
 
 app = FastAPI()
 DIRETORIO_ATUAL = os.path.dirname(os.path.abspath(__file__))
 CAMINHO_RAIZ = os.path.abspath(os.path.join(DIRETORIO_ATUAL, os.pardir, os.pardir))
 CAMINHO_JSON = os.path.join(CAMINHO_RAIZ, 'server', 'dados', 'champions.json')
-CAMINHO_BUILD = os.path.join(CAMINHO_RAIZ, 'server', 'dados', 'builds.json')
 archive_name = CAMINHO_JSON
-build_name = CAMINHO_BUILD
 
-try:
-    with open(archive_name, 'r', encoding='utf-8') as archive:
-        champ = json.load(archive)
-    with open(build_name, 'r', encoding='utf-8') as archive:
-        build = json.load(archive)
-except FileNotFoundError:
-    print(f'Erro: O arquivo {archive_name} não foi encontrado')
-except json.JSONDecodeError:
-    print(f'O arquivo JSON é inválido.')
-except Exception as e:
-    print(f'Ocorreu um: {e}')
+def open_bd():
+    try:
+        with open(archive_name, 'r', encoding='utf-8') as archive:
+            champ = json.load(archive)
+    except FileNotFoundError:
+        print(f'Erro: O arquivo {archive_name} não foi encontrado')
+    except json.JSONDecodeError:
+        print(f'O arquivo JSON é inválido.')
+    except Exception as e:
+        print(f'Ocorreu um: {e}')
+    return champ
+
+def write_bd(champ):
+    try:
+        with open(archive_name, 'w', encoding='utf-8') as archive:
+            json.dump(champ, archive, ensure_ascii=False, indent=4)
+    except FileNotFoundError:
+        print(f'Erro: O arquivo {archive_name} não foi encontrado')
+    except json.JSONDecodeError:
+        print(f'O arquivo JSON é inválido.')
+    except Exception as e:
+        print(f'Ocorreu um: {e}')
+    
 
 @app.get('/champion/all')
-def get_all():
+def get_all(champ = open_bd()):
     return champ['data']
 
 @app.get('/champion/{name}')
-def get_champ(name):
+def get_champ(name: str, champ = open_bd()):
+    if name not in champ['data']:
+        return name
+        #raise NameError(f'Erro: Campeão {name} não encontrado', 400)
     return champ['data'][name]
 
 @app.post('/champion/{name}/build')
-def insert_build(name):
+async def insert_build(name: str, request: Request, champ = open_bd()):
+    
+    items = await request.json()
 
+    if not 'build' in champ['data'][name]:
+        champ['data'][name]['build'] = []
 
+    new_build = {
+        'id': len(champ['data'][name]['build'])+1,
+        'item1': items['item1'],
+        'item2': items['item2'],
+        'item3': items['item3'],
+        'item4': items['item4'],
+        'item5': items['item5'],
+        'item6': items['item6'],
+    }
+    champ['data'][name]['build'].append(new_build)
+    write_bd(champ)
+    return {"message": "Build inserida com sucesso!", "build": new_build}
 
 if __name__ == '__main__':
     uvicorn.run('server:app', reload=True)

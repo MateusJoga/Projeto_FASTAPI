@@ -3630,18 +3630,7 @@
                 "attackdamageperlevel": 2.9,
                 "attackspeedperlevel": 3.3,
                 "attackspeed": 0.638
-            },
-            "build": [
-                {
-                    "id": 1,
-                    "item1": "asddas",
-                    "item2": "adssdaasd",
-                    "item3": "asdasd",
-                    "item4": "dasdas",
-                    "item5": "asdasd",
-                    "item6": "asdasd"
-                }
-            ]
+            }
         },
         "Lulu": {
             "version": "14.3.1",
