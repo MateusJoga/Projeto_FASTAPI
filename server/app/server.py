@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 import json
 import uvicorn
 import os
@@ -12,14 +12,14 @@ archive_name = CAMINHO_JSON
 def open_bd():
     try:
         with open(archive_name, 'r', encoding='utf-8') as archive:
-            champ = json.load(archive)
+            return json.load(archive)
     except FileNotFoundError:
         print(f'Erro: O arquivo {archive_name} não foi encontrado')
     except json.JSONDecodeError:
         print(f'O arquivo JSON é inválido.')
     except Exception as e:
         print(f'Ocorreu um: {e}')
-    return champ
+    #return champ
 
 def write_bd(champ):
     try:
@@ -31,21 +31,29 @@ def write_bd(champ):
         print(f'O arquivo JSON é inválido.')
     except Exception as e:
         print(f'Ocorreu um: {e}')
-    
 
 @app.get('/champion/all')
-def get_all(champ = open_bd()):
+def get_all():
+    champ = open_bd()
     return champ['data']
 
-@app.get('/champion/{name}')
-def get_champ(name: str, champ = open_bd()):
+@app.get('/champion/{name}/build{id}')
+def get_build_champ(name: str, id: int):
+    champ = open_bd()
     if name not in champ['data']:
-        return name
-        #raise NameError(f'Erro: Campeão {name} não encontrado', 400)
-    return champ['data'][name]
+        raise HTTPException(status_code=400, detail='Esse campeão não existe.')
+    return champ['data'][name]['build'][id-1]
+
+@app.get('/champion/{name}')
+def get_champ(name: str):
+    champ = open_bd()
+    if name not in champ['data']:
+        raise HTTPException(status_code=400, detail='Esse campeão não existe.')
+    return champ['data'].get(name)
 
 @app.post('/champion/{name}/build')
-async def insert_build(name: str, request: Request, champ = open_bd()):
+async def insert_build(name: str, request: Request):
+    champ = open_bd()
     
     items = await request.json()
 
