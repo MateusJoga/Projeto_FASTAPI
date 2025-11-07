@@ -220,5 +220,5 @@ No cliente, isso é exibido como:
 ## 👨‍🏫 Autores
 
 **Mateus Grandel**\
-**Arthur A. Leite**
+**Arthur A. Leite**\
 💻 Projeto criado para estudo de **APIs REST com FastAPI e Python.**
